@@ -10,8 +10,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import com.andyagulue.CodeFellowship.models.ApplicationUserRepository;
 
 @Configuration
 @EnableWebSecurity
@@ -26,8 +24,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Override
-    public void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception{
-        authenticationManagerBuilder // attach out userdetailsService to the auth Manager and the passwordEncoder
+    public void configure(final AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception{
+        authenticationManagerBuilder // attach out userDetailsService to the auth Manager and the passwordEncoder
                     .userDetailsService(userDetailsServiceImplementation)
                     .passwordEncoder(passwordEncoder());
     }
@@ -39,25 +37,29 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Override
-    public void configure(HttpSecurity httpSecurity) throws Exception {
+    public void configure(final HttpSecurity httpSecurity) throws Exception {
         // we do all the work to decide how users can access the site
       httpSecurity
+              // this section is if you're deploying to heroku
                 .cors().disable()
                 .csrf().disable() //cross site resource forgery (heroku needs this)
 
                 .authorizeRequests()
                 .antMatchers("/").permitAll()
-                .antMatchers("/applicationUser", "/login").permitAll()
+                .antMatchers( "/login", "/applicationUser").permitAll()
+                .antMatchers("/css/**").permitAll()
                 .anyRequest().authenticated()
 
                 .and()
                 .formLogin()
-                .defaultSuccessUrl("/")
                 .loginPage("/login")
+                .defaultSuccessUrl("/applicationUser")
+
 
                 .and()
                 .logout()
-                .logoutSuccessUrl("/login");
+                .logoutSuccessUrl("/login")
+                .deleteCookies("JSESSIONID");
 
     }
 }
